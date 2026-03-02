@@ -14,7 +14,6 @@
 
 use tracing::{debug, warn};
 
-use crate::device_model::{DeviceEval, DeviceModel, DeviceStamp};
 use crate::gpu_solver::{GpuSolver, SparseMatrix};
 
 // ─── Convergence Config ────────────────────────────────────────────
@@ -234,7 +233,7 @@ mod tests {
 
     /// Build a simple 1-node resistive system: G*V = I
     /// (Linear — NR should converge in 1 iteration)
-    fn linear_system(voltages: &[f64], target_v: f64) -> SparseMatrix {
+    fn linear_system(_voltages: &[f64], target_v: f64) -> SparseMatrix {
         let g = 1e-3; // 1kΩ conductance
         let i_src = target_v * g; // Current source to drive target voltage
 

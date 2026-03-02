@@ -438,7 +438,7 @@ impl MnaSystem {
                 self.g_matrix[di * self.size + (g - 1)] += gm;
             }
             if s > 0 {
-                self.g_matrix[di * self.size + (s - 1)] -= (gm + gds);
+                self.g_matrix[di * self.size + (s - 1)] -= gm + gds;
             }
             self.g_matrix[di * self.size + di] += gds;
             self.b_vector[di] -= i_eq;
@@ -452,7 +452,7 @@ impl MnaSystem {
             if d > 0 {
                 self.g_matrix[si * self.size + (d - 1)] -= gds;
             }
-            self.g_matrix[si * self.size + si] += (gm + gds);
+            self.g_matrix[si * self.size + si] += gm + gds;
             self.b_vector[si] += i_eq;
         }
     }

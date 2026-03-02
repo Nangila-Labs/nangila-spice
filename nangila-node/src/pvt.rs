@@ -17,7 +17,7 @@
 
 use std::collections::HashMap;
 use std::time::Instant;
-use tracing::{debug, info, warn};
+use tracing::{debug, warn};
 
 // ─── PVT Corner Specification ──────────────────────────────────────
 
@@ -422,7 +422,7 @@ impl DeltaSolver {
             );
         }
 
-        let n_nodes = self
+        let _n_nodes = self
             .golden
             .points
             .first()

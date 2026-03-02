@@ -14,9 +14,9 @@ fn main() {
     let mut col_indices = Vec::with_capacity(n * 3);
     let mut values = Vec::with_capacity(n * 3);
 
-    let mut nnz = 0;
+    let mut nnz: i32 = 0;
     for i in 0..n {
-        row_ptr[i] = nnz as i32;
+        row_ptr[i] = nnz;
 
         if i > 0 {
             col_indices.push((i - 1) as i32);
@@ -34,7 +34,7 @@ fn main() {
             nnz += 1;
         }
     }
-    row_ptr[n] = nnz as i32;
+    row_ptr[n] = nnz;
 
     mat.row_ptr = row_ptr;
     mat.col_indices = col_indices;
@@ -42,10 +42,9 @@ fn main() {
 
     println!("Matrix built! Non-zeros: {}", mat.nnz());
 
-    let corners = 200;
-
     #[cfg(feature = "cuda")]
     {
+        let corners = 200;
         println!("--------------------------------------------------");
         println!(">>> L40S GPU / cuSPARSE Delta Solver Backend <<<");
         println!("--------------------------------------------------");

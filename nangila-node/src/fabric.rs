@@ -108,8 +108,7 @@ impl FabricNode {
 
     /// Send a rollback request to a peer.
     pub async fn send_rollback(&mut self, req: RollbackRequest) -> bool {
-        let target = req.from_partition; // Send back to the requester? No, broadcast
-                                         // Actually, rollback is typically broadcast to all neighbors
+        // Rollback is broadcast to all peers rather than routed to a single target.
         let mut success = true;
         let targets: Vec<u32> = self.senders.keys().copied().collect();
         for target_id in targets {

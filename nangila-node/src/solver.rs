@@ -288,7 +288,7 @@ mod tests {
         };
 
         let mut solver = TransientSolver::new(netlist, ghosts, comm, config);
-        let (final_state, stats) = solver.run();
+        let (_final_state, stats) = solver.run();
 
         // Verify simulation ran
         assert!(stats.total_steps > 0, "Should have completed steps");

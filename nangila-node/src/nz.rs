@@ -15,7 +15,7 @@
 //! Phase 2, Sprint 7 deliverable.
 
 use serde::{Deserialize, Serialize};
-use std::io::{self, Read, Write};
+use std::io;
 
 /// Magic bytes for .nz file identification
 const NZ_MAGIC: [u8; 4] = [b'N', b'Z', b'W', b'F']; // "NZWF" = Nangila-Z Waveform
@@ -682,7 +682,7 @@ mod tests {
         let (time, voltage) = make_spiky_waveform(100);
         let mut writer = NzWriter::new(1e-6);
 
-        let nz = writer.compress(&time, &[("V(clk)", &voltage)]);
+        let _nz = writer.compress(&time, &[("V(clk)", &voltage)]);
 
         // Should have raw blocks for the spike transitions
         assert!(
@@ -705,8 +705,7 @@ mod tests {
 
         // Verify error bound is respected
         let mut max_error: f64 = 0.0;
-        for (i, (&original, &reconstructed)) in
-            voltage.iter().zip(decompressed[0].1.iter()).enumerate()
+        for (&original, &reconstructed) in voltage.iter().zip(decompressed[0].1.iter())
         {
             let error = (original - reconstructed).abs();
             if error > max_error {

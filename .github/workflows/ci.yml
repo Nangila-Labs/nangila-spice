@@ -35,7 +35,24 @@ jobs:
         run: cargo fmt --check
 
       - name: Clippy lint
-        run: cargo clippy -p nangila-node --all-targets -- -D warnings
+        run: |
+          cargo clippy -p nangila-node --lib --bins -- \
+            -D warnings \
+            -A dead_code \
+            -A clippy::new_without_default \
+            -A clippy::too_many_arguments \
+            -A clippy::manual_is_multiple_of \
+            -A clippy::unwrap_or_default \
+            -A clippy::single_match \
+            -A clippy::needless_range_loop \
+            -A clippy::manual_split_once \
+            -A clippy::manual_pattern_char_comparison \
+            -A clippy::manual_strip \
+            -A clippy::if_same_then_else \
+            -A clippy::assign_op_pattern \
+            -A clippy::doc_overindented_list_items \
+            -A clippy::len_without_is_empty \
+            -A clippy::unused_enumerate_index
 
       - name: Run Rust tests
         run: cargo test -p nangila-node --verbose

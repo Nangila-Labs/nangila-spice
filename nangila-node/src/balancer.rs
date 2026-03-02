@@ -11,8 +11,7 @@
 //!
 //! Phase 2, Sprint 8 deliverable.
 
-use std::collections::HashMap;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 // ─── Partition Metrics ─────────────────────────────────────────────
 
@@ -546,7 +545,7 @@ mod tests {
 
         // Check should produce plans at the right interval
         // step_counter is 300 at this point (100 * 3 partitions)
-        let plans = monitor.check_balance();
+        let _plans = monitor.check_balance();
         // May or may not have plans depending on exact timing
 
         let summary = monitor.summary();
