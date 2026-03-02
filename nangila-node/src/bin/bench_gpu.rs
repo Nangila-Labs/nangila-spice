@@ -87,8 +87,6 @@ fn main() {
         println!("Attempting to dense factorize a 10,000 x 10,000 slice to estimate time...");
 
         let sub_n = 5_000;
-        let mut sub_mat = SparseMatrix::new(sub_n);
-        sub_mat.rhs = vec![1.0; sub_n];
         let mut sub_dense = vec![0.0f64; sub_n * sub_n];
         for i in 0..sub_n {
             sub_dense[i * sub_n + i] = 2.0;
@@ -99,7 +97,7 @@ fn main() {
                 sub_dense[i * sub_n + i + 1] = -1.0;
             }
         }
-        sub_mat = SparseMatrix::from_dense(&sub_dense, sub_n, 1e-30);
+        let mut sub_mat = SparseMatrix::from_dense(&sub_dense, sub_n, 1e-30);
         sub_mat.rhs = vec![1.0; sub_n];
 
         let mut solver_cpu = GpuSolver::with_backend(SolverBackend::Cpu);
