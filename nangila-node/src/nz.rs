@@ -705,8 +705,7 @@ mod tests {
 
         // Verify error bound is respected
         let mut max_error: f64 = 0.0;
-        for (&original, &reconstructed) in voltage.iter().zip(decompressed[0].1.iter())
-        {
+        for (&original, &reconstructed) in voltage.iter().zip(decompressed[0].1.iter()) {
             let error = (original - reconstructed).abs();
             if error > max_error {
                 max_error = error;
