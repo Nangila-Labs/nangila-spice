@@ -11,9 +11,9 @@ use tracing::info;
 
 use crate::comm::CommLayer;
 use crate::ghost::GhostBuffer;
-use crate::mna::Element;
+use crate::mna::{Element, SourceWaveform};
 use crate::ngspice_ffi::PartitionNetlist;
-use crate::solver::{SimConfig, SimStats, TransientSolver};
+use crate::solver::{SimConfig, TransientSolver};
 
 // ─── Circuit Generators ────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ pub fn generate_cim_array(n_rows: usize, n_cols: usize) -> Vec<Element> {
         elements.push(Element::VoltageSource {
             pos: wl_node,
             neg: 0,
-            v: voltage,
+            source: SourceWaveform::Dc(voltage),
         });
     }
 
@@ -79,7 +79,7 @@ pub fn generate_rc_ladder(n_stages: usize, r: f64, c: f64) -> Vec<Element> {
     elements.push(Element::VoltageSource {
         pos: 1,
         neg: 0,
-        v: 1.8,
+        source: SourceWaveform::Dc(1.8),
     });
 
     // RC stages
@@ -112,14 +112,14 @@ pub fn generate_resistor_mesh(n: usize, r: f64) -> Vec<Element> {
     elements.push(Element::VoltageSource {
         pos: node(0, 0),
         neg: 0,
-        v: 1.8,
+        source: SourceWaveform::Dc(1.8),
     });
 
     // Current sink at opposite corner
     elements.push(Element::CurrentSource {
         pos: 0,
         neg: node(n - 1, n - 1),
-        i: 1e-3,
+        source: SourceWaveform::Dc(1e-3),
     });
 
     // Horizontal resistors
@@ -192,6 +192,10 @@ fn count_nodes(elements: &[Element]) -> usize {
                 nodes.insert(*a);
                 nodes.insert(*b);
             }
+            Element::Inductor { a, b, .. } => {
+                nodes.insert(*a);
+                nodes.insert(*b);
+            }
             Element::VoltageSource { pos, neg, .. } => {
                 nodes.insert(*pos);
                 nodes.insert(*neg);
@@ -228,9 +232,11 @@ pub fn run_benchmark(name: &str, elements: Vec<Element>, config: SimConfig) -> B
 
     let netlist = PartitionNetlist {
         name: name.to_string(),
-        elements,
         num_nodes: node_count,
+        elements,
         ghost_map: vec![],
+        node_names: (1..=node_count).map(|i| format!("node_{}", i)).collect(),
+        initial_conditions: vec![],
     };
 
     let ghost_buffer = GhostBuffer::new();
