@@ -106,9 +106,19 @@ pub enum Element {
     /// Ghost node injection: fixed voltage from neighbor partition
     GhostSource { node: usize, voltage: f64 },
     /// Non-linear Diode (node_p, node_n)
-    Diode { p: usize, n: usize, model: DiodeModel },
+    Diode {
+        p: usize,
+        n: usize,
+        model: DiodeModel,
+    },
     /// Non-linear MOSFET (Drain, Gate, Source, Bulk)
-    Mosfet { d: usize, g: usize, s: usize, b: usize, model: MosfetLevel1 },
+    Mosfet {
+        d: usize,
+        g: usize,
+        s: usize,
+        b: usize,
+        model: MosfetLevel1,
+    },
 }
 
 /// The MNA system: G·x = b with optional companion model for capacitors.
@@ -252,11 +262,23 @@ impl MnaSystem {
             return;
         }
 
-        let prev_current = if branch < prev.len() { prev[branch] } else { 0.0 };
-        
+        let prev_current = if branch < prev.len() {
+            prev[branch]
+        } else {
+            0.0
+        };
+
         // TRAP needs previous voltage across L. BE does not, but computing it is cheap.
-        let va_prev = if a > 0 && (a - 1) < prev.len() { prev[a - 1] } else { 0.0 };
-        let vb_prev = if b > 0 && (b - 1) < prev.len() { prev[b - 1] } else { 0.0 };
+        let va_prev = if a > 0 && (a - 1) < prev.len() {
+            prev[a - 1]
+        } else {
+            0.0
+        };
+        let vb_prev = if b > 0 && (b - 1) < prev.len() {
+            prev[b - 1]
+        } else {
+            0.0
+        };
         let vl_prev = va_prev - vb_prev;
 
         let (equiv_res, b_val) = match method {
@@ -301,8 +323,16 @@ impl MnaSystem {
             return;
         }
 
-        let va_prev = if a > 0 && (a - 1) < prev_v.len() { prev_v[a - 1] } else { 0.0 };
-        let vb_prev = if b > 0 && (b - 1) < prev_v.len() { prev_v[b - 1] } else { 0.0 };
+        let va_prev = if a > 0 && (a - 1) < prev_v.len() {
+            prev_v[a - 1]
+        } else {
+            0.0
+        };
+        let vb_prev = if b > 0 && (b - 1) < prev_v.len() {
+            prev_v[b - 1]
+        } else {
+            0.0
+        };
 
         let (g_eq, i_eq) = match method {
             IntegrationMethod::BackwardEuler => {
@@ -404,16 +434,24 @@ impl MnaSystem {
         // D equation: Id leaves drain
         if d > 0 {
             let di = d - 1;
-            if g > 0 { self.g_matrix[di * self.size + (g - 1)] += gm; }
-            if s > 0 { self.g_matrix[di * self.size + (s - 1)] -= (gm + gds); }
+            if g > 0 {
+                self.g_matrix[di * self.size + (g - 1)] += gm;
+            }
+            if s > 0 {
+                self.g_matrix[di * self.size + (s - 1)] -= (gm + gds);
+            }
             self.g_matrix[di * self.size + di] += gds;
             self.b_vector[di] -= i_eq;
         }
         // S equation: Id enters source
         if s > 0 {
             let si = s - 1;
-            if g > 0 { self.g_matrix[si * self.size + (g - 1)] -= gm; }
-            if d > 0 { self.g_matrix[si * self.size + (d - 1)] -= gds; }
+            if g > 0 {
+                self.g_matrix[si * self.size + (g - 1)] -= gm;
+            }
+            if d > 0 {
+                self.g_matrix[si * self.size + (d - 1)] -= gds;
+            }
             self.g_matrix[si * self.size + si] += (gm + gds);
             self.b_vector[si] += i_eq;
         }
@@ -554,7 +592,13 @@ mod tests {
 
         for _step in 0..100 {
             let mut mna = MnaSystem::new(2, elements.clone());
-            mna.stamp_all(&prev, &[], dt, (_step as f64 + 1.0) * dt, IntegrationMethod::BackwardEuler);
+            mna.stamp_all(
+                &prev,
+                &[],
+                dt,
+                (_step as f64 + 1.0) * dt,
+                IntegrationMethod::BackwardEuler,
+            );
             assert!(mna.solve(), "Solve should succeed");
 
             voltages.push(mna.node_voltage(2));

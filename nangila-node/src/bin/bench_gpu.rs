@@ -69,7 +69,10 @@ fn main() {
         println!("\n[GPU RESULTS]");
         println!("Total solving time: {:.2?}", elapsed);
         println!("Time per corner:    {:.2?}", elapsed / corners as u32);
-        println!("Throughput:         {:.1} corners/sec", corners as f64 / elapsed.as_secs_f64());
+        println!(
+            "Throughput:         {:.1} corners/sec",
+            corners as f64 / elapsed.as_secs_f64()
+        );
         println!("--------------------------------------------------\n");
     }
 
@@ -78,37 +81,44 @@ fn main() {
         println!("--------------------------------------------------");
         println!(">>> CPU-Only Baseline (Dense Fallback) <<<");
         println!("--------------------------------------------------");
-        
-        // Only run 5 corners on CPU because generating 1M x 1M dense matrix will crash 
+
+        // Only run 5 corners on CPU because generating 1M x 1M dense matrix will crash
         // the CPU, so we skip the actual solve in this bench to prevent an OOM kill.
         println!("NOTE: The standard CPU path uses dense factorization.");
         println!("Attempting to dense factorize a 10,000 x 10,000 slice to estimate time...");
-        
+
         let sub_n = 5_000;
         let mut sub_mat = SparseMatrix::new(sub_n);
         sub_mat.rhs = vec![1.0; sub_n];
         let mut sub_dense = vec![0.0f64; sub_n * sub_n];
         for i in 0..sub_n {
             sub_dense[i * sub_n + i] = 2.0;
-            if i > 0 { sub_dense[i * sub_n + i - 1] = -1.0; }
-            if i < sub_n - 1 { sub_dense[i * sub_n + i + 1] = -1.0; }
+            if i > 0 {
+                sub_dense[i * sub_n + i - 1] = -1.0;
+            }
+            if i < sub_n - 1 {
+                sub_dense[i * sub_n + i + 1] = -1.0;
+            }
         }
         sub_mat = SparseMatrix::from_dense(&sub_dense, sub_n, 1e-30);
         sub_mat.rhs = vec![1.0; sub_n];
-        
+
         let mut solver_cpu = GpuSolver::with_backend(SolverBackend::Cpu);
-        
+
         let t0 = Instant::now();
         solver_cpu.solve(&mut sub_mat);
         let t_sub = t0.elapsed();
-        
+
         // $O(N^3)$ scaling
         let scaling_factor = (n as f64 / sub_n as f64).powi(3);
         let est_full = t_sub.as_secs_f64() * scaling_factor;
-        
+
         println!("\n[CPU ESTIMATE FOR 1,000,000 NODES]");
         println!("5K node solve took: {:.2?} (dense)", t_sub);
-        println!("Estimated 1M node factorization time: {:.0} hours", est_full / 3600.0);
+        println!(
+            "Estimated 1M node factorization time: {:.0} hours",
+            est_full / 3600.0
+        );
         println!("Compile with `--features cuda` to run the true GPU benchmark.");
         println!("--------------------------------------------------\n");
     }

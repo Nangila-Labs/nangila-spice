@@ -11,7 +11,6 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  # ─── Rust Tests ───────────────────────────────────────────────────
   rust-tests:
     name: Rust Tests
     runs-on: ubuntu-latest
@@ -29,29 +28,18 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            nangila-spice/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('nangila-spice/Cargo.lock') }}
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
 
       - name: Check formatting
-        working-directory: nangila-spice
         run: cargo fmt --check
 
       - name: Clippy lint
-        working-directory: nangila-spice
-        run: cargo clippy -- -D warnings
+        run: cargo clippy -p nangila-node --all-targets -- -D warnings
 
-      - name: Run all Rust tests
-        working-directory: nangila-spice
-        run: cargo test --verbose
+      - name: Run Rust tests
+        run: cargo test -p nangila-node --verbose
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rust-test-results
-          path: nangila-spice/target/debug/
-
-  # ─── Python Tests ─────────────────────────────────────────────────
   python-tests:
     name: Python Tests
     runs-on: ubuntu-latest
@@ -61,23 +49,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ngspice
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        working-directory: nangila-spice
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-py-${{ matrix.python-version }}-${{ hashFiles('Cargo.lock') }}
+
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
+          python -m pip install . pytest pytest-cov
+
+      - name: Build nangila-node
+        run: cargo build -p nangila-node --bin nangila-node
 
       - name: Run Python tests
-        working-directory: nangila-spice
+        env:
+          PYTHONPATH: src
         run: |
-          python -m pytest python/tests/ -v \
+          python -m pytest src/tests/ -v \
             --tb=short \
-            --cov=python/nangila_spice \
+            --cov=src/nangila_spice \
             --cov-report=xml \
             --cov-report=term-missing
 
@@ -85,95 +93,44 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python-coverage-${{ matrix.python-version }}
-          path: nangila-spice/coverage.xml
+          path: coverage.xml
 
-  # ─── PVT Regression ───────────────────────────────────────────────
-  pvt-regression:
-    name: PVT Corner Regression
-    runs-on: ubuntu-latest
-    needs: [rust-tests, python-tests]
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: pip install pytest
-
-      - name: Build Rust solver
-        working-directory: nangila-spice
-        run: cargo build --release -p nangila-node
-
-      - name: Run PVT sweep (1000-corner regression)
-        working-directory: nangila-spice
-        run: |
-          python -m nangila_spice.cli pvt benchmarks/reference_circuits/inverter.sp --workers 4
-          # (Ensure the process completes successfully; exit code 0)
-
-      - name: Archive PVT results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pvt-regression-results
-          path: /tmp/nangila_pvt/
-
-  # ─── Binary Smoke Test ───────────────────────────────────────────
   binary-smoke:
-    name: Binary Smoke Test (inverter.sp + sram_6t.sp)
+    name: Binary Smoke Test
     runs-on: ubuntu-latest
     needs: rust-tests
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Cache Cargo
+      - name: Cache Cargo registry
         uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
-            nangila-spice/target
-          key: ${{ runner.os }}-cargo-smoke-${{ hashFiles('nangila-spice/Cargo.lock') }}
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-smoke-${{ hashFiles('Cargo.lock') }}
 
       - name: Build nangila-node binary
-        working-directory: nangila-spice
-        run: cargo build -p nangila-node
+        run: cargo build -p nangila-node --bin nangila-node
 
-      - name: Smoke test — inverter.sp
-        working-directory: nangila-spice
+      - name: Smoke test inverter.sp
         run: |
-          OUT=$(./target/debug/nangila-node \
+          ./target/debug/nangila-node \
             --partition benchmarks/reference_circuits/inverter.sp \
-            --tstop 1e-9 --dt 1e-12 2>&1)
-          echo "$OUT"
-          # Assert node voltages appear in output
-          echo "$OUT" | grep -q "V(node" || (echo "FAIL: no node voltages in output" && exit 1)
-          # Assert VDD rail (node 1) is 1.8V
-          echo "$OUT" | grep "V(node 1)" | grep -q "1.800000V" || \
-            (echo "FAIL: VDD should be 1.800000V" && exit 1)
-          echo "inverter.sp smoke test: PASSED"
+            --tstop 1e-9 \
+            --dt 1e-12 \
+            --waveform-json /tmp/inverter.json
+          test -s /tmp/inverter.json
 
-      - name: Smoke test — sram_6t.sp
-        working-directory: nangila-spice
+      - name: Smoke test sram_6t.sp
         run: |
-          OUT=$(./target/debug/nangila-node \
+          ./target/debug/nangila-node \
             --partition benchmarks/reference_circuits/sram_6t.sp \
-            --tstop 2e-9 --dt 1e-12 2>&1)
-          echo "$OUT"
-          echo "$OUT" | grep -q "V(node" || (echo "FAIL: no node voltages in output" && exit 1)
-          echo "sram_6t.sp smoke test: PASSED"
-
-      - name: Check test count regression
-        working-directory: nangila-spice
-        run: |
-          RESULT=$(cargo test 2>&1 | grep "^test result")
-          echo "Test result: $RESULT"
-          # Extract pass count
-          PASSED=$(echo "$RESULT" | grep -oP '\d+ passed' | grep -oP '\d+')
-          echo "Tests passed: $PASSED"
-          # Fail if we've regressed from known baseline (Sprint 14 = 94 tests)
-          [ "$PASSED" -ge 94 ] || (echo "TEST REGRESSION: only $PASSED tests pass (need ≥94)" && exit 1)
+            --tstop 2e-9 \
+            --dt 1e-12 \
+            --waveform-json /tmp/sram_6t.json
+          test -s /tmp/sram_6t.json

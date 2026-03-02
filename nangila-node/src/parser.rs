@@ -249,7 +249,7 @@ impl SpiceParser {
                 in_subckt = true;
                 let name = tokens[1].to_uppercase();
                 let ports: Vec<String> = tokens[2..].iter().map(|s| s.to_string()).collect();
-                
+
                 current_subckt = Some(SubcircuitDef {
                     name,
                     ports,
@@ -258,7 +258,11 @@ impl SpiceParser {
             } else if first == ".ENDS" {
                 in_subckt = false;
                 if let Some(def) = current_subckt.take() {
-                    debug!("Discovered SUBCKT: {} with {} ports", def.name, def.ports.len());
+                    debug!(
+                        "Discovered SUBCKT: {} with {} ports",
+                        def.name,
+                        def.ports.len()
+                    );
                     self.subcircuits.insert(def.name.clone(), def);
                 }
             } else if first == ".PARAM" && !in_subckt {
@@ -266,7 +270,7 @@ impl SpiceParser {
                 for tok in &tokens[1..] {
                     if let Some(eq_pos) = tok.find('=') {
                         let k = tok[..eq_pos].to_lowercase();
-                        let v = parse_scale_factor(&tok[eq_pos+1..]).unwrap_or(0.0);
+                        let v = parse_scale_factor(&tok[eq_pos + 1..]).unwrap_or(0.0);
                         self.params.insert(k, v);
                     }
                 }
@@ -279,11 +283,18 @@ impl SpiceParser {
                     for tok in &tokens[3..] {
                         if let Some(eq_pos) = tok.find('=') {
                             let k = tok[..eq_pos].to_lowercase();
-                            let v = parse_scale_factor(&tok[eq_pos+1..]).unwrap_or(0.0);
+                            let v = parse_scale_factor(&tok[eq_pos + 1..]).unwrap_or(0.0);
                             mparams.insert(k, v);
                         }
                     }
-                    self.models.insert(mname.clone(), ModelCard { name: mname, model_type: mtype, params: mparams });
+                    self.models.insert(
+                        mname.clone(),
+                        ModelCard {
+                            name: mname,
+                            model_type: mtype,
+                            params: mparams,
+                        },
+                    );
                 }
             } else if in_subckt {
                 if let Some(def) = &mut current_subckt {
@@ -325,14 +336,16 @@ impl SpiceParser {
             // --- NOT inside a subcircuit definition right now ---
             self.parse_element_line(&tokens, "");
         }
-        
+
         Ok(())
     }
 
     /// Parse a single logic line into an Element, supporting Subcircuit recursive expansion.
     /// `prefix` is prepended to subcircuit internal nodes (e.g., "X1.internal_node").
     fn parse_element_line(&mut self, tokens: &[&str], prefix: &str) {
-        if tokens.is_empty() { return; }
+        if tokens.is_empty() {
+            return;
+        }
 
         let kw = tokens[0].to_uppercase();
         let ch = kw.chars().next().unwrap_or(' ');
@@ -373,23 +386,28 @@ impl SpiceParser {
                     let remainder = tokens[3..].join(" ").to_uppercase();
 
                     let source = if remainder.starts_with("DC") {
-                        SourceWaveform::Dc(tokens.get(4).map(|s| self.parse_value(s)).unwrap_or(0.0))
+                        SourceWaveform::Dc(
+                            tokens.get(4).map(|s| self.parse_value(s)).unwrap_or(0.0),
+                        )
                     } else if remainder.contains("PULSE(") || remainder.contains("PULSE (") {
                         self.parse_pulse_source(&remainder)
                             .unwrap_or(SourceWaveform::Dc(0.0))
                     } else if remainder.starts_with("SIN(") || remainder.starts_with("SIN (") {
                         // SIN(offset amplitude freq ...) — use amplitude as DC approximation
-                        let after_paren = remainder
-                            .splitn(2, '(')
-                            .nth(1)
-                            .unwrap_or("");
+                        let after_paren = remainder.splitn(2, '(').nth(1).unwrap_or("");
                         let vals: Vec<&str> = after_paren
                             .split(|c: char| c == ' ' || c == ',' || c == ')')
                             .filter(|s| !s.is_empty())
                             .collect();
                         // vals[0]=offset, vals[1]=amplitude
-                        let offset = vals.first().and_then(|s| parse_scale_factor(s)).unwrap_or(0.0);
-                        let amp = vals.get(1).and_then(|s| parse_scale_factor(s)).unwrap_or(0.0);
+                        let offset = vals
+                            .first()
+                            .and_then(|s| parse_scale_factor(s))
+                            .unwrap_or(0.0);
+                        let amp = vals
+                            .get(1)
+                            .and_then(|s| parse_scale_factor(s))
+                            .unwrap_or(0.0);
                         SourceWaveform::Dc(offset + amp)
                     } else {
                         SourceWaveform::Dc(self.parse_value(tokens[3]))
@@ -403,7 +421,8 @@ impl SpiceParser {
                         other => other,
                     };
 
-                    self.elements.push(Element::VoltageSource { pos, neg, source });
+                    self.elements
+                        .push(Element::VoltageSource { pos, neg, source });
                 }
             }
             'I' => {
@@ -411,7 +430,8 @@ impl SpiceParser {
                     let pos = self.resolve_node(tokens[1], prefix);
                     let neg = self.resolve_node(tokens[2], prefix);
                     let source = SourceWaveform::Dc(self.parse_value(tokens[3]));
-                    self.elements.push(Element::CurrentSource { pos, neg, source });
+                    self.elements
+                        .push(Element::CurrentSource { pos, neg, source });
                 }
             }
             'M' => {
@@ -429,7 +449,7 @@ impl SpiceParser {
                     for tok in &tokens[6..] {
                         if let Some(eq) = tok.find('=') {
                             let key = tok[..eq].to_lowercase();
-                            let val = self.parse_value(&tok[eq+1..]);
+                            let val = self.parse_value(&tok[eq + 1..]);
                             match key.as_str() {
                                 "w" => w = val,
                                 "l" => l = val,
@@ -449,18 +469,28 @@ impl SpiceParser {
                     let mut tox = 2e-9; // 2nm typical
                     let mut lambda = 0.0;
                     let mut kp_override: Option<f64> = None;
-                    
+
                     if let Some(model) = self.models.get(&model_name) {
                         if model.model_type.contains("PMOS") {
                             kind = MosfetType::Pmos;
                         } else if model.model_type.contains("NMOS") {
                             kind = MosfetType::Nmos;
                         }
-                        if let Some(&v) = model.params.get("vto") { vth = v; }
-                        if let Some(&kp) = model.params.get("kp") { kp_override = Some(kp.abs()); }
-                        if let Some(&u) = model.params.get("u0") { u0 = u * 1e-4; } // convert cm^2/Vs to m^2/Vs
-                        if let Some(&t) = model.params.get("tox") { tox = t; }
-                        if let Some(&lam) = model.params.get("lambda") { lambda = lam.max(0.0); }
+                        if let Some(&v) = model.params.get("vto") {
+                            vth = v;
+                        }
+                        if let Some(&kp) = model.params.get("kp") {
+                            kp_override = Some(kp.abs());
+                        }
+                        if let Some(&u) = model.params.get("u0") {
+                            u0 = u * 1e-4;
+                        } // convert cm^2/Vs to m^2/Vs
+                        if let Some(&t) = model.params.get("tox") {
+                            tox = t;
+                        }
+                        if let Some(&lam) = model.params.get("lambda") {
+                            lambda = lam.max(0.0);
+                        }
                     }
 
                     // PVT CMOS Scaling Laws
@@ -468,15 +498,23 @@ impl SpiceParser {
                     let t_kelvin = self.temp_c + 273.15;
                     let t_nom_kelvin = 27.0 + 273.15;
                     let mut mobility_scale = (t_nom_kelvin / t_kelvin).powf(1.5);
-                    
+
                     // Temperature effects
-                    vth -= 0.002 * delta_t; 
+                    vth -= 0.002 * delta_t;
                     u0 *= mobility_scale;
-                    
+
                     // Process corner effects
                     match self.process.as_str() {
-                        "FF" => { mobility_scale *= 1.15; u0 *= 1.15; vth -= 0.1; }
-                        "SS" => { mobility_scale *= 0.85; u0 *= 0.85; vth += 0.1; }
+                        "FF" => {
+                            mobility_scale *= 1.15;
+                            u0 *= 1.15;
+                            vth -= 0.1;
+                        }
+                        "SS" => {
+                            mobility_scale *= 0.85;
+                            u0 *= 0.85;
+                            vth += 0.1;
+                        }
                         "FS" => {
                             if model_name.contains("NMOS") || model_name.contains("N") {
                                 mobility_scale *= 1.10;
@@ -525,17 +563,21 @@ impl SpiceParser {
             'D' => {
                 // Diode: Dname anode cathode MODEL [AREA=..]
                 if tokens.len() >= 4 {
-                    let anode  = self.resolve_node(tokens[1], prefix);
+                    let anode = self.resolve_node(tokens[1], prefix);
                     let cathode = self.resolve_node(tokens[2], prefix);
                     let model_name = tokens[3].to_uppercase();
-                    
+
                     let mut is = 1e-14;
                     let mut n = 1.0;
                     if let Some(model) = self.models.get(&model_name) {
-                        if let Some(&v) = model.params.get("is") { is = v; }
-                        if let Some(&v) = model.params.get("n") { n = v; }
+                        if let Some(&v) = model.params.get("is") {
+                            is = v;
+                        }
+                        if let Some(&v) = model.params.get("n") {
+                            n = v;
+                        }
                     }
-                    
+
                     let model = DiodeModel {
                         is,
                         vt: 0.02585,
@@ -543,15 +585,19 @@ impl SpiceParser {
                         node_p: anode,
                         node_n: cathode,
                     };
-                    
-                    self.elements.push(Element::Diode { p: anode, n: cathode, model });
+
+                    self.elements.push(Element::Diode {
+                        p: anode,
+                        n: cathode,
+                        model,
+                    });
                 }
             }
             'X' => {
                 // Subcircuit Instantiation: Xname port1 port2 ... subckt_name
                 if tokens.len() > 2 {
                     let subckt_name = tokens.last().unwrap().to_uppercase();
-                    
+
                     // Find definition
                     let def = match self.subcircuits.get(&subckt_name).cloned() {
                         Some(d) => d,
@@ -565,7 +611,12 @@ impl SpiceParser {
                     let instance_ports = &tokens[1..tokens.len() - 1];
 
                     if def.ports.len() != instance_ports.len() {
-                        error!("Port mismatch in subcircuit {}: expected {}, got {}", subckt_name, def.ports.len(), instance_ports.len());
+                        error!(
+                            "Port mismatch in subcircuit {}: expected {}, got {}",
+                            subckt_name,
+                            def.ports.len(),
+                            instance_ports.len()
+                        );
                         return;
                     }
 
@@ -587,21 +638,29 @@ impl SpiceParser {
                     }
 
                     // Recursive expansion: stream through the subcircuit's lines, substituting port variables
-                    let new_prefix = if prefix.is_empty() { instance_name.to_string() } else { format!("{}.{}", prefix, instance_name) };
-                    
+                    let new_prefix = if prefix.is_empty() {
+                        instance_name.to_string()
+                    } else {
+                        format!("{}.{}", prefix, instance_name)
+                    };
+
                     for line in &def.lines {
                         let inner_tokens: Vec<&str> = line.split_whitespace().collect();
-                        
-                        let substituted_tokens: Vec<String> = inner_tokens.iter().map(|&t| {
-                            let tl = t.to_lowercase();
-                            if let Some(mapped) = port_aliases.get(&tl) {
-                                mapped.clone()
-                            } else {
-                                t.to_string() // Must NOT recursively apply outer prefix here, handled by parse_element_line!
-                            }
-                        }).collect();
-                        
-                        let refs: Vec<&str> = substituted_tokens.iter().map(|s| s.as_str()).collect();
+
+                        let substituted_tokens: Vec<String> = inner_tokens
+                            .iter()
+                            .map(|&t| {
+                                let tl = t.to_lowercase();
+                                if let Some(mapped) = port_aliases.get(&tl) {
+                                    mapped.clone()
+                                } else {
+                                    t.to_string() // Must NOT recursively apply outer prefix here, handled by parse_element_line!
+                                }
+                            })
+                            .collect();
+
+                        let refs: Vec<&str> =
+                            substituted_tokens.iter().map(|s| s.as_str()).collect();
                         self.parse_element_line(&refs, &new_prefix);
                     }
                 }
@@ -615,7 +674,8 @@ impl SpiceParser {
                         tracing::warn!(
                             "{} '{}' encountered but file inclusion is not yet supported. \
                              Models/subcircuits from this file will be missing.",
-                            upper, file_ref
+                            upper,
+                            file_ref
                         );
                     }
                     ".IC" => {
@@ -633,12 +693,14 @@ impl SpiceParser {
                             let net_name = tokens[1];
                             let local_idx = tokens[2].parse::<usize>().unwrap_or(0);
                             let owner = tokens[3].parse::<u32>().unwrap_or(0);
-                            
+
                             // Use a consistent hash for net_id across partitions
                             let net_id = self.hash_net_name(net_name);
                             self.ghost_map.push((net_id, local_idx, owner));
-                            info!("Ghost node: {} (id: {}) maps to local node {}, owned by P{}", 
-                                net_name, net_id, local_idx, owner);
+                            info!(
+                                "Ghost node: {} (id: {}) maps to local node {}, owned by P{}",
+                                net_name, net_id, local_idx, owner
+                            );
                         }
                     }
                     ".NODEMAP" => {
@@ -695,15 +757,20 @@ impl SpiceParser {
     }
 
     /// Read an arbitrary SPICE .sp file and convert it into the solver's `PartitionNetlist`.
-    pub fn parse_file<P: AsRef<Path>>(path: P, process: &str, vdd: f64, temp_c: f64) -> Result<PartitionNetlist, std::io::Error> {
+    pub fn parse_file<P: AsRef<Path>>(
+        path: P,
+        process: &str,
+        vdd: f64,
+        temp_c: f64,
+    ) -> Result<PartitionNetlist, std::io::Error> {
         let mut parser = SpiceParser::new(process, vdd, temp_c);
         let path_ref = path.as_ref();
 
         info!("Parsing netlist: {:?}", path_ref);
-        
+
         // Pass 1: Stash subcircuits
         parser.discover_subcircuits(path_ref)?;
-        
+
         // Pass 2: Inflate instances and primitives
         parser.flatten_netlist(path_ref)?;
 
@@ -717,10 +784,18 @@ impl SpiceParser {
         // This guarantees no floating nets exist anywhere, preventing Singular Matrix panics.
         let num_actual_nodes = parser.next_node_id; // Starts at 1
         for i in 1..num_actual_nodes {
-            parser.elements.push(Element::Resistor { a: i, b: 0, r: 100e6 });
+            parser.elements.push(Element::Resistor {
+                a: i,
+                b: 0,
+                r: 100e6,
+            });
         }
 
-        let name = path_ref.file_name().unwrap_or_default().to_string_lossy().into_owned();
+        let name = path_ref
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .into_owned();
 
         let node_names = parser.node_names();
         let elements = parser.elements;
@@ -767,14 +842,16 @@ mod tests {
         f.write_all(test_netlist.as_bytes()).unwrap();
 
         let netlist = SpiceParser::parse_file(&path, "TT", 1.8, 27.0).unwrap();
-        
+
         assert_eq!(netlist.num_nodes, 2);
         assert_eq!(netlist.elements.len(), 5); // 3 original + 2 Gmin resistors
-        
+
         // Ensure R1 is 1000 ohms
         if let Element::Resistor { a: _, b: _, r } = netlist.elements[1] {
             assert_eq!(r, 1000.0);
-        } else { panic!("Expected Resistor"); }
+        } else {
+            panic!("Expected Resistor");
+        }
     }
 
     #[test]
@@ -803,7 +880,7 @@ mod tests {
         f.write_all(test_netlist.as_bytes()).unwrap();
 
         let netlist = SpiceParser::parse_file(&path, "TT", 1.8, 27.0).unwrap();
-        
+
         // Primitives: 1 Vsource, 1 R_load
         // Instances: X1 expands to 2 Resistors, 1 Cap (3 elements)
         //            X2 expands to 2 Resistors, 1 Cap (3 elements)
@@ -822,7 +899,7 @@ mod tests {
         let test_buf = b"R1 1 2\n+ 1k\nC1\n+ 2\n+ 0\n+ 100f";
         let reader = BufReader::new(&test_buf[..]);
         let lines: Vec<String> = SpiceParser::line_continuation_iter(reader).collect();
-        
+
         assert_eq!(lines.len(), 2);
         assert_eq!(lines[0], "R1 1 2 1k");
         assert_eq!(lines[1], "C1 2 0 100f");

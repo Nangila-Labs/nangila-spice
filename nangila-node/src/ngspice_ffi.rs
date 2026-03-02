@@ -22,11 +22,11 @@
 use serde::{Deserialize, Serialize};
 use tracing::{info, warn};
 
-use crate::mna::{Element, MnaSystem};
-use crate::solver::PartitionState;
-use crate::newton::{NewtonSolver, NrState};
-use crate::gpu_solver::SparseMatrix;
 use crate::device_model::DeviceModel;
+use crate::gpu_solver::SparseMatrix;
+use crate::mna::{Element, MnaSystem};
+use crate::newton::{NewtonSolver, NrState};
+use crate::solver::PartitionState;
 
 /// Backend solver selection.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
@@ -193,8 +193,11 @@ impl SolverEngine {
         // Update ghost node voltages in the element list
         let mut elements = self.netlist.elements.clone();
         for (net_id, voltage) in ghost_voltages {
-            if let Some((_gid, local_node, _owner)) =
-                self.netlist.ghost_map.iter().find(|(gid, _, _)| gid == net_id)
+            if let Some((_gid, local_node, _owner)) = self
+                .netlist
+                .ghost_map
+                .iter()
+                .find(|(gid, _, _)| gid == net_id)
             {
                 elements.push(Element::GhostSource {
                     node: *local_node,
@@ -279,14 +282,18 @@ impl SolverEngine {
                         _ => {}
                     }
                 }
-                let mut sparse = SparseMatrix::from_dense(&local_mna.g_matrix, local_mna.size, 1e-30);
+                let mut sparse =
+                    SparseMatrix::from_dense(&local_mna.g_matrix, local_mna.size, 1e-30);
                 sparse.rhs = local_mna.b_vector.clone();
                 sparse
             });
         }
 
         if !final_state.converged {
-            warn!("Newton-Raphson failed to converge at t={:.2e}s even with BE damping", current.time + dt);
+            warn!(
+                "Newton-Raphson failed to converge at t={:.2e}s even with BE damping",
+                current.time + dt
+            );
             return None;
         }
 
@@ -300,11 +307,19 @@ impl SolverEngine {
             if let Element::Capacitor { a, b, c } = el {
                 let va_new = if *a > 0 { voltages[*a - 1] } else { 0.0 };
                 let vb_new = if *b > 0 { voltages[*b - 1] } else { 0.0 };
-                let va_old = if *a > 0 { current.voltages.get(*a - 1).copied().unwrap_or(0.0) } else { 0.0 };
-                let vb_old = if *b > 0 { current.voltages.get(*b - 1).copied().unwrap_or(0.0) } else { 0.0 };
-                
+                let va_old = if *a > 0 {
+                    current.voltages.get(*a - 1).copied().unwrap_or(0.0)
+                } else {
+                    0.0
+                };
+                let vb_old = if *b > 0 {
+                    current.voltages.get(*b - 1).copied().unwrap_or(0.0)
+                } else {
+                    0.0
+                };
+
                 let prev_ic = current.cap_currents.get(cap_idx).copied().unwrap_or(0.0);
-                
+
                 let ic_new = if dt > 0.0 {
                     match method {
                         crate::mna::IntegrationMethod::BackwardEuler => {
@@ -317,7 +332,7 @@ impl SolverEngine {
                 } else {
                     0.0
                 };
-                
+
                 cap_currents.push(ic_new);
                 cap_idx += 1;
             }
@@ -346,7 +361,13 @@ impl SolverEngine {
         let nr_state = NrState::new(sys_size).with_initial_guess(initial_guess);
         let final_state = nr_solver.solve_timestep(nr_state, |v_guess| {
             let mut local_mna = MnaSystem::new(num_nodes, elements.clone());
-            local_mna.stamp_all(&[], &[], 0.0, 0.0, crate::mna::IntegrationMethod::BackwardEuler);
+            local_mna.stamp_all(
+                &[],
+                &[],
+                0.0,
+                0.0,
+                crate::mna::IntegrationMethod::BackwardEuler,
+            );
 
             for el in &elements {
                 match el {

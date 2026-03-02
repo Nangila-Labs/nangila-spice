@@ -16,7 +16,6 @@ use nangila_node::ngspice_ffi::PartitionNetlist;
 use nangila_node::parser::SpiceParser;
 use nangila_node::solver::{SimConfig, TransientSolver};
 
-
 /// Nangila SPICE Solver Node
 #[derive(Parser, Debug)]
 #[command(name = "nangila-node")]
@@ -150,16 +149,22 @@ fn main() {
                 .map_err(|e| e.to_string())
                 .and_then(|file| serde_json::from_reader(file).map_err(|e| e.to_string()))
         } else {
-            info!("Parsing SPICE netlist from: {} (Corner: {}, {:.2}V, {:.0}C)", 
-                  partition_path, args.process, args.vdd, args.temp);
+            info!(
+                "Parsing SPICE netlist from: {} (Corner: {}, {:.2}V, {:.0}C)",
+                partition_path, args.process, args.vdd, args.temp
+            );
             SpiceParser::parse_file(&partition_path, &args.process, args.vdd, args.temp)
                 .map_err(|e| e.to_string())
         };
 
         match netlist_res {
             Ok(netlist) => {
-                info!("Loaded netlist '{}': {} nodes, {} elements",
-                    netlist.name, netlist.num_nodes, netlist.elements.len());
+                info!(
+                    "Loaded netlist '{}': {} nodes, {} elements",
+                    netlist.name,
+                    netlist.num_nodes,
+                    netlist.elements.len()
+                );
                 run_from_netlist(netlist, args);
             }
             Err(e) => {
@@ -233,7 +238,13 @@ fn run_demo(args: Args) {
     }
 
     if let Some(path) = args.waveform_json.as_deref() {
-        if let Err(err) = write_waveform_json(path, "RC Demo", &["vdd".into(), "cap".into()], &solver.waveform, &stats) {
+        if let Err(err) = write_waveform_json(
+            path,
+            "RC Demo",
+            &["vdd".into(), "cap".into()],
+            &solver.waveform,
+            &stats,
+        ) {
             eprintln!("ERROR: Failed to write waveform JSON: {}", err);
             std::process::exit(1);
         }
@@ -305,7 +316,9 @@ fn run_from_netlist(netlist: PartitionNetlist, args: Args) {
     }
 
     if let Some(path) = args.waveform_json.as_deref() {
-        if let Err(err) = write_waveform_json(path, &netlist_name, &node_names, &solver.waveform, &stats) {
+        if let Err(err) =
+            write_waveform_json(path, &netlist_name, &node_names, &solver.waveform, &stats)
+        {
             eprintln!("ERROR: Failed to write waveform JSON: {}", err);
             std::process::exit(1);
         }
@@ -319,7 +332,13 @@ fn run_from_netlist(netlist: PartitionNetlist, args: Args) {
     let wf = &solver.waveform;
     if wf.len() >= 5 {
         info!("=== Waveform Samples (node 1) ===");
-        let indices = [0, wf.len() / 4, wf.len() / 2, 3 * wf.len() / 4, wf.len() - 1];
+        let indices = [
+            0,
+            wf.len() / 4,
+            wf.len() / 2,
+            3 * wf.len() / 4,
+            wf.len() - 1,
+        ];
         for &i in &indices {
             let (t, ref v) = wf[i];
             if !v.is_empty() {

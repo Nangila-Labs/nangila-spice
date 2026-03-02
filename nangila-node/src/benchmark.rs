@@ -203,7 +203,9 @@ fn count_nodes(elements: &[Element]) -> usize {
             Element::GhostSource { node, .. } => {
                 nodes.insert(*node);
             }
-            Element::Mosfet { d, g, s, b: bulk, .. } => {
+            Element::Mosfet {
+                d, g, s, b: bulk, ..
+            } => {
                 nodes.insert(*d);
                 nodes.insert(*g);
                 nodes.insert(*s);

@@ -10,7 +10,7 @@ pub mod mna;
 pub mod newton;
 pub mod ngspice_ffi;
 pub mod nz;
+pub mod parser;
 pub mod predictor;
 pub mod pvt;
 pub mod solver;
-pub mod parser;
