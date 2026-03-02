@@ -41,7 +41,7 @@ This release is not yet a speed win versus `ngspice`.
 
 It is a correctness and validation milestone. For an early simulator project, that is the right thing to finish first.
 
-Internally, this milestone closes Phase 1. Publicly, it should be described as a correctness-first release.
+Internally, this milestone closes the correctness-validation slice of the broader Phase 1 plan described in the whitepaper. Publicly, it should be described as a correctness-first release.
 
 ## Short Version
 
@@ -49,6 +49,6 @@ Internally, this milestone closes Phase 1. Publicly, it should be described as a
 
 ## Links
 
-- Benchmark report: [docs/correctness-first-benchmark-report.md](/Users/craigchirara/nangila/nangila-spice/docs/correctness-first-benchmark-report.md)
-- v1 contract: [docs/v1-simulator-contract.md](/Users/craigchirara/nangila/nangila-spice/docs/v1-simulator-contract.md)
-- implementation plan: [docs/phase-1-implementation-plan.md](/Users/craigchirara/nangila/nangila-spice/docs/phase-1-implementation-plan.md)
+- Benchmark report: [docs/correctness-first-benchmark-report.md](correctness-first-benchmark-report.md)
+- v1 contract: [docs/v1-simulator-contract.md](v1-simulator-contract.md)
+- implementation plan: [docs/phase-1-implementation-plan.md](phase-1-implementation-plan.md)

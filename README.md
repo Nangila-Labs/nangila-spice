@@ -69,7 +69,7 @@ python3 -m pip install .
 brew install ngspice
 cargo build -p nangila-node --bin nangila-node
 nangila run benchmarks/reference_circuits/inverter.sp --partitions 1 --tstop 2e-9 --dt 1e-11
-nangila phase1-report
+nangila correctness-report
 ```
 
 ## Quickstart
@@ -122,7 +122,7 @@ If you request partitioning, the CLI will surface the validation state explicitl
 This command reproduces the published correctness-first benchmark report locally:
 
 ```bash
-nangila phase1-report --include-extended
+nangila correctness-report --include-extended
 ```
 
 It writes:

@@ -12,6 +12,8 @@ This document completes Phase 0 by defining the locked v1 scope for Nangila SPIC
 
 This is a product contract for v1. It is not a claim that every item is already implemented in the current codebase.
 
+For the current public repo state, the validated external claim is narrower: a correctness-first release built around the single-node Rust solver and the official `ngspice`-backed correctness suite.
+
 ## Product Definition
 
 Nangila v1 is a high-performance transient simulator for a constrained SPICE subset, optimized for digital-heavy transistor-level and near-digital circuits.
@@ -299,15 +301,15 @@ Both tiers are part of the official v1 correctness suite.
 
 The mandatory correctness gate is:
 
-- [`tests/spice_examples/simple_rc.sp`](/Users/craigchirara/nangila/nangila-spice/tests/spice_examples/simple_rc.sp)
-- [`benchmarks/reference_circuits/inverter.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/reference_circuits/inverter.sp)
-- [`benchmarks/reference_circuits/sram_6t.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/reference_circuits/sram_6t.sp)
-- [`benchmarks/reference_circuits/c17_synth.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/reference_circuits/c17_synth.sp)
-- [`benchmarks/reference_circuits/c17_full.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/reference_circuits/c17_full.sp)
-- [`benchmarks/auto_synth/c432.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c432.sp)
-- [`benchmarks/auto_synth/s27.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/s27.sp)
-- [`benchmarks/auto_synth/s382.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/s382.sp)
-- [`benchmarks/auto_synth/s641.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/s641.sp)
+- [`tests/spice_examples/simple_rc.sp`](../tests/spice_examples/simple_rc.sp)
+- [`benchmarks/reference_circuits/inverter.sp`](../benchmarks/reference_circuits/inverter.sp)
+- [`benchmarks/reference_circuits/sram_6t.sp`](../benchmarks/reference_circuits/sram_6t.sp)
+- [`benchmarks/reference_circuits/c17_synth.sp`](../benchmarks/reference_circuits/c17_synth.sp)
+- [`benchmarks/reference_circuits/c17_full.sp`](../benchmarks/reference_circuits/c17_full.sp)
+- [`benchmarks/auto_synth/c432.sp`](../benchmarks/auto_synth/c432.sp)
+- [`benchmarks/auto_synth/s27.sp`](../benchmarks/auto_synth/s27.sp)
+- [`benchmarks/auto_synth/s382.sp`](../benchmarks/auto_synth/s382.sp)
+- [`benchmarks/auto_synth/s641.sp`](../benchmarks/auto_synth/s641.sp)
 
 These are the official pass/fail circuits for the required per-change correctness gate.
 
@@ -315,9 +317,9 @@ These are the official pass/fail circuits for the required per-change correctnes
 
 The extended correctness gate is:
 
-- [`benchmarks/auto_synth/c880.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c880.sp)
-- [`benchmarks/auto_synth/c1355.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c1355.sp)
-- [`benchmarks/auto_synth/c1908.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c1908.sp)
+- [`benchmarks/auto_synth/c880.sp`](../benchmarks/auto_synth/c880.sp)
+- [`benchmarks/auto_synth/c1355.sp`](../benchmarks/auto_synth/c1355.sp)
+- [`benchmarks/auto_synth/c1908.sp`](../benchmarks/auto_synth/c1908.sp)
 
 These are official v1 correctness cases, but they are intentionally extended-only in Phase 1 because they exceed the per-change CI/runtime budget.
 
@@ -331,15 +333,15 @@ Promotion from extended to mandatory requires:
 
 The official v1 performance gate suite is:
 
-- [`benchmarks/auto_synth/c2670.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c2670.sp)
-- [`benchmarks/auto_synth/c3540.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c3540.sp)
-- [`benchmarks/auto_synth/c5315.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c5315.sp)
-- [`benchmarks/auto_synth/c6288.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c6288.sp)
-- [`benchmarks/auto_synth/c7552.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/c7552.sp)
-- [`benchmarks/auto_synth/s1238.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/s1238.sp)
-- [`benchmarks/auto_synth/s5378.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/s5378.sp)
-- [`benchmarks/auto_synth/s9234.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/s9234.sp)
-- [`benchmarks/auto_synth/s13207.sp`](/Users/craigchirara/nangila/nangila-spice/benchmarks/auto_synth/s13207.sp)
+- [`benchmarks/auto_synth/c2670.sp`](../benchmarks/auto_synth/c2670.sp)
+- [`benchmarks/auto_synth/c3540.sp`](../benchmarks/auto_synth/c3540.sp)
+- [`benchmarks/auto_synth/c5315.sp`](../benchmarks/auto_synth/c5315.sp)
+- [`benchmarks/auto_synth/c6288.sp`](../benchmarks/auto_synth/c6288.sp)
+- [`benchmarks/auto_synth/c7552.sp`](../benchmarks/auto_synth/c7552.sp)
+- [`benchmarks/auto_synth/s1238.sp`](../benchmarks/auto_synth/s1238.sp)
+- [`benchmarks/auto_synth/s5378.sp`](../benchmarks/auto_synth/s5378.sp)
+- [`benchmarks/auto_synth/s9234.sp`](../benchmarks/auto_synth/s9234.sp)
+- [`benchmarks/auto_synth/s13207.sp`](../benchmarks/auto_synth/s13207.sp)
 
 These are the official benchmark circuits for speed comparison against ngspice on the supported subset.
 

@@ -94,7 +94,7 @@ def invoke_sweep(args):
         print(f"Sweep failed: {e}")
         sys.exit(1)
 
-def invoke_phase1_report(args):
+def invoke_correctness_report(args):
     from .phase1_report import main as phase1_report_main
 
     cmd = []
@@ -142,8 +142,8 @@ def main():
     sweep_parser.add_argument("--full-sim", action="store_true", help="Force full massively-parallel Newton-Raphson simulation sweeps (disables delta mode)")
 
     report_parser = subparsers.add_parser(
-        "phase1-report",
-        help="Run the Phase 1 ngspice-backed benchmark report",
+        "correctness-report",
+        help="Run the ngspice-backed correctness benchmark report",
     )
     report_parser.add_argument(
         "--include-extended",
@@ -162,6 +162,28 @@ def main():
         default="artifacts/phase1_benchmark_report.md",
         help="Path for the Markdown summary report",
     )
+
+    legacy_report_parser = subparsers.add_parser(
+        "phase1-report",
+        help=argparse.SUPPRESS,
+    )
+    legacy_report_parser.add_argument(
+        "--include-extended",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    legacy_report_parser.add_argument(
+        "--output-json",
+        type=str,
+        default="artifacts/phase1_benchmark_report.json",
+        help=argparse.SUPPRESS,
+    )
+    legacy_report_parser.add_argument(
+        "--output-md",
+        type=str,
+        default="artifacts/phase1_benchmark_report.md",
+        help=argparse.SUPPRESS,
+    )
     
     args = parser.parse_args()
     
@@ -173,8 +195,8 @@ def main():
         invoke_synth(args)
     elif args.command == "sweep":
         invoke_sweep(args)
-    elif args.command == "phase1-report":
-        invoke_phase1_report(args)
+    elif args.command in ("correctness-report", "phase1-report"):
+        invoke_correctness_report(args)
 
 if __name__ == "__main__":
     main()

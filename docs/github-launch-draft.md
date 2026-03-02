@@ -35,7 +35,7 @@ Nangila is an in-progress transient circuit simulator in a correctness-first rel
 
 `v0.2.0`
 
-Use this tag for the first public GitHub release once the Phase 1 baseline is committed.
+Use this tag for the first public GitHub release once the correctness-first baseline is committed.
 
 Suggested commands after committing the release state:
 
@@ -78,14 +78,14 @@ python3 -m pip install .
 brew install ngspice
 cargo build -p nangila-node --bin nangila-node
 nangila run benchmarks/reference_circuits/inverter.sp --partitions 1 --tstop 2e-9 --dt 1e-11
-nangila phase1-report
+nangila correctness-report
 ```
 
 Key docs:
 
-- [docs/v1-simulator-contract.md](/Users/craigchirara/nangila/nangila-spice/docs/v1-simulator-contract.md)
-- [docs/correctness-first-benchmark-report.md](/Users/craigchirara/nangila/nangila-spice/docs/correctness-first-benchmark-report.md)
-- [docs/production-roadmap.md](/Users/craigchirara/nangila/nangila-spice/docs/production-roadmap.md)
+- [docs/v1-simulator-contract.md](v1-simulator-contract.md)
+- [docs/correctness-first-benchmark-report.md](correctness-first-benchmark-report.md)
+- [docs/production-roadmap.md](production-roadmap.md)
 
 ## Launch Post Draft
 
@@ -99,6 +99,7 @@ Current state:
 
 - single-node Rust solver is the validated path
 - partitioned mode is experimental
+- PVT orchestration is experimental unless it is using real solver output
 - the v1 scope is narrow and explicit
 - benchmark reproduction is built into the repo
 

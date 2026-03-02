@@ -6,7 +6,7 @@ Phase 1 establishes the correctness foundation for Nangila v1.
 
 The goal is to replace permissive or placeholder success conditions with a repeatable, oracle-backed validation system that proves the single-node Rust solver matches ngspice closely enough on the v1 supported subset.
 
-Phase 1 is complete only when the official correctness gate suite in [docs/v1-simulator-contract.md](/Users/craigchirara/nangila/nangila-spice/docs/v1-simulator-contract.md) can be run automatically and produces real pass/fail results against ngspice.
+Phase 1 is complete only when the official correctness gate suite in [docs/v1-simulator-contract.md](v1-simulator-contract.md) can be run automatically and produces real pass/fail results against ngspice.
 
 ## Phase 1 Outcomes
 

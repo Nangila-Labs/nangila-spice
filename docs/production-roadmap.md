@@ -4,6 +4,8 @@
 
 This document lays out a research and development plan to move Nangila SPICE from an in-progress prototype into a production-grade system.
 
+This is an internal planning document. It describes the target production system and later phases, not the full set of claims made by the current public correctness-first release.
+
 For this project, "production mode" should mean:
 
 - Numerically trustworthy on a clearly defined circuit class.
@@ -15,11 +17,11 @@ The immediate goal should not be "general-purpose SPICE replacement." The better
 
 The formal Phase 0 v1 contract is defined in:
 
-- [docs/v1-simulator-contract.md](/Users/craigchirara/nangila/nangila-spice/docs/v1-simulator-contract.md)
+- [docs/v1-simulator-contract.md](v1-simulator-contract.md)
 
 The execution plan for Phase 1 is defined in:
 
-- [docs/phase-1-implementation-plan.md](/Users/craigchirara/nangila/nangila-spice/docs/phase-1-implementation-plan.md)
+- [docs/phase-1-implementation-plan.md](phase-1-implementation-plan.md)
 
 ## Recommended Scope for v1
 

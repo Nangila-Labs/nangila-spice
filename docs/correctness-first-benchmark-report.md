@@ -10,6 +10,8 @@ This report serves as the benchmark record for Nangila's correctness-first relea
 - waveform error metrics versus `ngspice`
 - local runtime characteristics of the current single-node solver
 
+This report is a correctness record, not a product-performance claim. The validated path behind these numbers is the single-node Rust solver on the original netlist.
+
 ## Measurement Context
 
 - Date: `2026-03-02`
@@ -18,7 +20,7 @@ This report serves as the benchmark record for Nangila's correctness-first relea
 - Cargo: `1.91.1`
 - Oracle: local `ngspice`
 - Nangila runtime: local `nangila-node`
-- Raw artifact: [`artifacts/phase1_benchmark_report.json`](/Users/craigchirara/nangila/nangila-spice/artifacts/phase1_benchmark_report.json)
+- Raw artifact: [`artifacts/phase1_benchmark_report.json`](../artifacts/phase1_benchmark_report.json)
 
 ## Headline Result
 
