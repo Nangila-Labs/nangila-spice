@@ -200,16 +200,16 @@ What is still in progress:
 
 ## Current Roadmap
 
-Publicly, this repository should be read as a correctness-first release. Internally, the project has completed Phase 1 and is moving into Phase 2.
+This roadmap is aligned to the whitepaper phase language. Publicly, the current repo should still be read as a correctness-first release. Internally, that correctness-first release is the completed validation slice of the whitepaper's broader Phase 1.
 
-- correctness-first release delivered:
-  oracle-backed correctness validation against `ngspice`
-- Phase 2 next:
-  harden the single-node production path and remove remaining placeholder behavior from production-facing execution
-- Phase 3 after that:
-  replace dense internals with sparse-first solver infrastructure
-- Later phases:
-  real partition equivalence, measured PVT, and validated GPU acceleration
+- Phase 1: MVP Core Functional
+  partially delivered in this repo snapshot: Rust parsing, MNA construction, transient solving, and oracle-backed validation against `ngspice` for the supported transient subset are in place; the broader whitepaper Phase 1 performance and scale claims are not yet delivered here
+- Phase 2: GPU Factorization In-Flight
+  in progress: sparse-first matrix infrastructure, iterative linear solves, and the path toward a validated GPU-backed factorization/solve flow
+- Phase 3: Orchestration and Scale-Out
+  next after the sparse/GPU base is credible: real partition equivalence, measured PVT workflows, and broader high-throughput orchestration
+- Later milestones:
+  device-model abstraction beyond the current simple subset, stronger compatibility, and performance work needed to compete with established tools on the supported workload class
 
 For the full plan, see [docs/production-roadmap.md](/Users/craigchirara/nangila/nangila-spice/docs/production-roadmap.md).
 
